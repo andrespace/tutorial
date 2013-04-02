@@ -4,4 +4,6 @@ main(void)
 {
 unsigned int i;
 
+P1DIR |= BIT1+BIT2;
+
 }

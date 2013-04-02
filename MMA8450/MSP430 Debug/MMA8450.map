@@ -1,0 +1,81 @@
+
+SYMBOLS BY NAME
+
+    2638 CODE       _ByteWrite          
+    110a UDATA0     _I2CBuffer          
+    262a CODE       _I2CReadInit        
+    2612 CODE       _I2CWriteInit       
+    1108 IDATA0     _I2C_Counter        
+    2500 ISR        _I2C_ISR            
+    25da CODE       _InitI2C            
+    1106 IDATA0     _PtrTransmit        
+    2668 CODE       _RandomRead         
+    1100            ___RAM_Address      
+    1400            ___RAM_Size         
+    1100 IDATA0     ___begin_IDATA0     
+    110a UDATA0     ___begin_UDATA0     
+    2a70 CODE       ___debug_io_lock    
+    2a72 CODE       ___debug_io_unlock  
+    2a1c CODE       ___do_debug_operation
+    110a IDATA0     ___end_IDATA0       
+    112e UDATA0     ___end_UDATA0       
+    291c CODE       ___float32_div      
+    29e6 CODE       ___int16_to_float32 
+    29f2 CODE       ___uint16_to_float32
+    29fc CODE       ___uint16_to_float32_aux
+    112c UDATA0     _dbgCntrlWord       
+    112a UDATA0     _dbgCommWord        
+    2a52 CODE       _debug_printf       
+    26b0 CODE       _main               
+    28fc CODE       _memcpy             
+    290c CODE       _memset             
+    111c UDATA0     _x                  
+    1128 UDATA0     _x_temp             
+    1122 UDATA0     _x_temp_2           
+    1118 UDATA0     _y                  
+    1126 UDATA0     _y_temp             
+    1120 UDATA0     _y_temp_2           
+    1102 IDATA0     _z                  
+    1124 UDATA0     _z_temp             
+    1100 IDATA0     _z_temp_2           
+
+
+SYMBOLS BY VALUE
+
+    1100            ___RAM_Address      
+    1100 IDATA0     ___begin_IDATA0     
+    1100 IDATA0     _z_temp_2           
+    1102 IDATA0     _z                  
+    1106 IDATA0     _PtrTransmit        
+    1108 IDATA0     _I2C_Counter        
+    110a IDATA0     ___end_IDATA0       
+    110a UDATA0     ___begin_UDATA0     
+    110a UDATA0     _I2CBuffer          
+    1118 UDATA0     _y                  
+    111c UDATA0     _x                  
+    1120 UDATA0     _y_temp_2           
+    1122 UDATA0     _x_temp_2           
+    1124 UDATA0     _z_temp             
+    1126 UDATA0     _y_temp             
+    1128 UDATA0     _x_temp             
+    112a UDATA0     _dbgCommWord        
+    112c UDATA0     _dbgCntrlWord       
+    112e UDATA0     ___end_UDATA0       
+    1400            ___RAM_Size         
+    2500 ISR        _I2C_ISR            
+    25da CODE       _InitI2C            
+    2612 CODE       _I2CWriteInit       
+    262a CODE       _I2CReadInit        
+    2638 CODE       _ByteWrite          
+    2668 CODE       _RandomRead         
+    26b0 CODE       _main               
+    28fc CODE       _memcpy             
+    290c CODE       _memset             
+    291c CODE       ___float32_div      
+    29e6 CODE       ___int16_to_float32 
+    29f2 CODE       ___uint16_to_float32
+    29fc CODE       ___uint16_to_float32_aux
+    2a1c CODE       ___do_debug_operation
+    2a52 CODE       _debug_printf       
+    2a70 CODE       ___debug_io_lock    
+    2a72 CODE       ___debug_io_unlock  

@@ -1,0 +1,190 @@
+#include <__cross_studio_io.h>
+#include <msp430.h>
+
+int x_temp,y_temp,z_temp,x_temp_2,y_temp_2,z_temp_2 = 0;
+float x,y,z = 0;
+int PtrTransmit = 0;   
+int I2C_Counter = 0;
+unsigned int I2CBuffer[7]; 
+
+void InitI2C (void)   
+{   
+    P3SEL = 0x0A;                       // select module function for the used I2C pins   
+         
+    U0CTL |= I2C + SYNC;                // (1) Select I2C mode with SWRST=1   
+    U0CTL &= ~I2CEN;                    // (2) disable the I2C module   
+                                        // (3) Configure the I2C module with I2CEN=0 :   
+                                        // U0CTL default settings:   
+                                        //   7-bit addressing, no DMA, no feedback   
+    I2CTCTL = I2CTRX + I2CSSEL_2;       // byte mode, repeat mode, clock source = SMCLK,   
+                                        // transmit mode   
+    I2CSA = 0x1C;                       // define Slave Address   
+                                        // In this case the Slave Address defines the   
+                                        // control byte that is sent to the EEPROM.   
+    I2CPSC = 0x00;                      // I2C clock = clock source/1   
+    I2CSCLH = 0x03;                     // SCL high period = 5*I2C clock   
+    I2CSCLL = 0x03;                     // SCL low period  = 5*I2C clock   
+    U0CTL |= I2CEN;                     // (4) set I2CEN via software 
+    TACTL = TASSEL_2 + MC_2;            // SMCLK, cont mode
+}  
+
+void I2CWriteInit (void)   
+{   
+    U0CTL |= MST;                       // define Master Mode   
+    I2CTCTL |= I2CTRX;                  // I2CTRX=1 => Transmit Mode (R/W bit = 0)   
+    I2CIFG &= ~TXRDYIFG;   
+    I2CIE = TXRDYIE;                    // enable Transmit ready interrupt 
+    _BIS_SR(GIE);
+}
+
+void I2CReadInit (void)   
+{   
+    I2CTCTL &= ~I2CTRX;                 // I2CTRX=0 => Receive Mode (R/W bit = 1)   
+    I2CIE = RXRDYIE;                    // enable Receive ready interrupt
+    _BIS_SR(GIE);
+}   
+
+void ByteWrite (int Address, char Data)   
+{   
+    I2CBuffer[1] = Address;             //   in the I2CBuffer.   
+    I2CBuffer[0] = Data;   
+    PtrTransmit = 1;                    // set I2CBuffer Pointer   
+     
+    I2CWriteInit();   
+    I2CNDAT = 0x02;                     // 1 control byte + 3 bytes should be transmitted   
+    I2CTCTL |= I2CSTT+I2CSTP;           // start and stop condition generation   
+                                        //      => I2C communication is started   
+    while (I2CDCTL & I2CBUSY);          // wait until I2C module has finished all operations  
+}
+
+void RandomRead (int Address)   
+{   
+    while (I2CDCTL & I2CBUSY);          // wait until I2C module has finished all operations   
+     
+    PtrTransmit = 0;                    // set I2CBuffer Pointer   
+     
+    I2CWriteInit();   
+    I2CNDAT = 1;                        // 1 control byte + 2 bytes should be transmitted
+    I2CBuffer[0] = Address;
+    I2CIFG &= ~ARDYIFG;                 // clear Access ready interrupt flag   
+    I2CTCTL |= I2CSTT;                  // start condition generation   
+                                        //      => I2C communication is started   
+    while ((~I2CIFG) & ARDYIFG);        // wait untill transmission is finished   
+    I2CReadInit();   
+    I2CNDAT = 7;                        // 1 byte should be received   
+     
+    I2CIFG &= ~ARDYIFG;                 // clear Access ready interrupt flag   
+    I2CTCTL |= I2CSTT + I2CSTP;         // start receiving and finally generate   
+                                        // re-start and stop condition   
+    while ((~I2CIFG) & ARDYIFG);        // wait untill transmission is finished
+}   
+  
+
+void main(void)
+{
+    WDTCTL = WDTPW + WDTHOLD;           // Stop WDT
+    DCOCTL = DCO0 + DCO1 + DCO2;              // Max DCO
+    BCSCTL1 = RSEL0 + RSEL1 + RSEL2;          // XT2on, max RSEL
+
+    InitI2C();
+    ByteWrite (0x2A, 0x00);
+    ByteWrite (0x0E, 0x03);
+    ByteWrite (0x2A, 0x05);
+        
+    for(;;)
+    {
+        RandomRead (0x00);
+
+        if (I2CBuffer[0] == 0xFF)
+        {
+            I2CBuffer[1] = I2CBuffer[1] << 6;   
+            I2CBuffer[2] = I2CBuffer[2] >> 2;
+            x_temp = I2CBuffer[2] | I2CBuffer[1];
+            x_temp_2 = (x_temp & 0x2000);
+            if (x_temp_2 == 0x2000)
+            {
+                x_temp = ~x_temp + 1;
+                x_temp = x_temp & 0x3FFF;
+                x = (float) x_temp / 1024;
+            }
+            else
+            {
+                x = (float) -x_temp / 1024;
+            }
+      
+            I2CBuffer[3] = I2CBuffer[3] << 6;
+            I2CBuffer[4] = I2CBuffer[4] >> 2;                               
+            y_temp = I2CBuffer[4] | I2CBuffer[3];
+            y_temp_2 = (y_temp & 0x2000);
+            if (y_temp_2 == 0x2000)
+            {
+                y_temp = ~y_temp + 1;
+                y_temp = y_temp & 0x3FFF;
+                y = (float) -y_temp / 1024;
+            }
+            else
+            {
+                y = (float) y_temp / 1024;
+            }
+                  
+            I2CBuffer[5] = I2CBuffer[5] << 6;
+            I2CBuffer[6] = I2CBuffer[6] >> 2;                               
+            z_temp = I2CBuffer[6] | I2CBuffer[5];
+            z_temp_2 = (z_temp & 0x2000);
+            if (z_temp_2 == 0x2000)
+            {
+                z_temp = ~z_temp + 1;
+                z_temp = z_temp & 0x3FFF;
+                z = (float) z_temp / 1024;
+            }
+            else
+            {
+                z = (float) -z_temp / 1024;
+            }
+    
+            //debug_printf("Status = %d \n ", I2CBuffer[0]);
+            debug_printf("\n ");
+            debug_printf("X = %.2f g \n ", x);
+            debug_printf("Y = %.2f g\n ", y);
+            debug_printf("Z = %.2f g\n ", z);
+    
+            I2C_Counter = 0;
+            __delay_cycles(50000);
+        }
+        else
+        {
+           I2C_Counter = 0;
+            __delay_cycles(50000);
+        }
+    }
+}
+
+
+#pragma vector=USART0TX_VECTOR
+__interrupt void I2C_ISR(void)
+{
+ switch( I2CIV )
+ {
+     case  2: break;                                // Arbitration lost
+     case  4: break;                                // No Acknowledge
+     case  6: break;                                // Own Address
+     case  8: break;                                // Register Access Ready
+     case 10:
+              I2CBuffer[I2C_Counter]=I2CDRB;                  // Receive Ready
+              I2C_Counter = I2C_Counter + 1;
+              break;
+     case 12:                                       // Transmit Ready
+              I2CDRB = I2CBuffer[PtrTransmit];      // Load I2CDRB and increment
+              PtrTransmit = PtrTransmit - 1;   
+              if (PtrTransmit < 0)   
+              {   
+                  I2CIE &= ~TXRDYIE;                // disable interrupts 
+              }  
+              break;
+     case 14: break;                                // General Call
+     case 16: break;                                // Start Condition
+ }
+}
+
+
+
